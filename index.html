@@ -1,31 +1,33 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<html lang="en" class="h-full bg-[#0a0c10] text-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Device Authenticator</title>
+    <title>Vault & Arcade — Device Workspace</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
                     },
-                    animation: {
-                        'pulse-glow': 'pulseGlow 4s infinite alternate',
-                    },
-                    keyframes: {
-                        pulseGlow: {
-                            '0%': { opacity: '0.3', transform: 'scale(1)' },
-                            '100%': { opacity: '0.6', transform: 'scale(1.1)' }
-                        }
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        panel: '#12151e',
+                        panelBorder: '#222736',
                     }
                 }
             }
@@ -33,279 +35,468 @@
     </script>
 
     <style>
-        .glass-card {
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        body {
+            background-image: 
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.04) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(99, 102, 241, 0.03) 0px, transparent 50%);
+            background-attachment: fixed;
         }
 
-        .glass-input {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        .human-card {
+            background-color: #12151e;
+            border: 1px solid #222736;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
         }
 
-        .glass-input:focus {
-            background: rgba(30, 41, 59, 0.9);
-            border-color: #6366f1;
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        .human-input {
+            background-color: #0c0e14;
+            border: 1px solid #272d3e;
+            color: #f1f5f9;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        /* Hero text zoom-down animation states */
+        .human-input:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Hero text smooth zoom down animation */
         .hero-big {
-            font-size: clamp(3rem, 10vw, 6rem);
-            font-weight: 900;
-            letter-spacing: -0.05em;
-            transform: translateY(28vh) scale(1.15);
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            transform: translateY(22vh) scale(1.1);
         }
 
         .hero-title {
-            font-size: clamp(2.25rem, 5vw, 3.5rem);
+            font-size: clamp(2rem, 4vw, 3rem);
             font-weight: 800;
             letter-spacing: -0.03em;
             transform: translateY(0) scale(1);
         }
 
         .transition-hero {
-            transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), font-size 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .fade-enter {
-            opacity: 0;
-            transform: translateY(12px) scale(0.98);
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        .fade-enter-active {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        ::-webkit-scrollbar-track {
+            background: #0a0c10;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222736;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #333b52;
         }
     </style>
 </head>
-<body class="h-full min-h-screen bg-slate-950 font-sans text-slate-100 antialiased overflow-x-hidden flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+<body class="h-full min-h-screen bg-[#0a0c10] font-sans text-slate-100 antialiased overflow-x-hidden flex flex-col justify-between">
 
-    <!-- Ambient Background Blobs -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl animate-pulse-glow"></div>
-        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/25 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 2s;"></div>
-        <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
-    </div>
-
-    <!-- Main Container -->
-    <main class="relative z-10 flex-1 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full">
+    <!-- Main Outer Container -->
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-start p-4 sm:p-6 md:p-10 max-w-5xl mx-auto w-full">
 
         <!-- ANIMATED HERO HEADLINE -->
-        <header id="hero-header" class="w-full text-center mt-6 sm:mt-10 mb-6 transition-hero hero-big">
-            <h1 class="bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm">
+        <header id="hero-header" class="w-full text-center mt-4 sm:mt-8 mb-3 transition-hero hero-big select-none">
+            <h1 class="text-white tracking-tight font-extrabold inline-flex items-center gap-3">
+                <span class="w-3 h-3 rounded-full bg-brand-500 inline-block animate-pulse"></span>
                 Welcome
             </h1>
         </header>
 
-        <!-- SUBTITLE & WARNING (Fades in after hero animation) -->
-        <div id="subtitle-container" class="text-center max-w-2xl mb-8 opacity-0 transition-opacity duration-700 ease-out pointer-events-none">
-            <p class="text-base sm:text-lg text-slate-300 font-medium leading-relaxed">
-                Create or log into an account to continue,
-                <span class="block mt-2 text-xs sm:text-sm text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5 backdrop-blur-md shadow-sm">
-                    <i class="fa-solid fa-triangle-exclamation mr-1.5 text-amber-400"></i>
-                    Warning: Accounts and all data are only stored on the device it was created on, for security purposes.
-                </span>
+        <!-- SUBTITLE & LOCAL WARNING -->
+        <div id="subtitle-container" class="text-center max-w-xl mb-8 opacity-0 transition-opacity duration-500 ease-out pointer-events-none">
+            <p class="text-sm sm:text-base text-slate-400 font-medium leading-relaxed">
+                Create or log into an account to continue.
             </p>
+            <div class="mt-3 inline-flex items-center gap-2 text-xs font-mono text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 text-left">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 flex-shrink-0"></i>
+                <span>Warning: Accounts and all data are saved only on this device's browser storage.</span>
+            </div>
         </div>
 
-        <!-- NOTIFICATION BANNER -->
-        <div id="notification-box" class="hidden w-full max-w-md mb-6 p-4 rounded-xl text-sm font-medium transition-all duration-300 border flex items-center gap-3">
-            <i id="notification-icon" class="fa-solid text-base"></i>
-            <span id="notification-text" class="flex-1"></span>
-            <button onclick="dismissNotification()" class="text-slate-400 hover:text-white transition-colors">
+        <!-- NOTIFICATION TOAST BAR -->
+        <div id="notification-box" class="hidden w-full max-w-md mb-6 p-3.5 rounded-xl text-xs font-medium transition-all duration-200 border flex items-center justify-between gap-3 shadow-lg">
+            <div class="flex items-center gap-2.5">
+                <i id="notification-icon" class="fa-solid text-sm"></i>
+                <span id="notification-text"></span>
+            </div>
+            <button onclick="dismissNotification()" class="text-slate-400 hover:text-white transition-colors p-1">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
-        <!-- VIEW 1: HOME CTA BUTTONS -->
-        <section id="home-view" class="w-full max-w-md hidden opacity-0 transition-all duration-500">
-            <div class="glass-card rounded-3xl p-8 shadow-2xl space-y-4">
-                <button onclick="switchView('signin')" class="w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all">
-                    <i class="fa-solid fa-right-to-bracket text-lg"></i>
-                    <span>Sign In</span>
-                    <i class="fa-solid fa-arrow-right absolute right-6 text-sm opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+        <!-- VIEW 1: LANDING CTA SELECTOR -->
+        <section id="home-view" class="w-full max-w-md hidden opacity-0 transition-all duration-300">
+            <div class="human-card rounded-2xl p-6 sm:p-8 space-y-3">
+                <button onclick="switchView('signin')" class="w-full flex items-center justify-between py-3.5 px-5 rounded-xl bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold text-sm shadow-sm active:scale-[0.99] transition-all group">
+                    <span class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-right-to-bracket text-base"></i>
+                        Sign In
+                    </span>
+                    <i class="fa-solid fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 transition-transform"></i>
                 </button>
 
-                <button onclick="switchView('signup')" class="w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 font-semibold active:scale-[0.98] transition-all">
-                    <i class="fa-solid fa-user-plus text-lg text-indigo-400"></i>
-                    <span>Create Account</span>
-                    <i class="fa-solid fa-arrow-right absolute right-6 text-sm opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                <button onclick="switchView('signup')" class="w-full flex items-center justify-between py-3.5 px-5 rounded-xl bg-[#181c28] hover:bg-[#202636] text-slate-200 border border-[#2d354a] font-semibold text-sm active:scale-[0.99] transition-all group">
+                    <span class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-user-plus text-base text-brand-500"></i>
+                        Create Account
+                    </span>
+                    <i class="fa-solid fa-arrow-right text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                 </button>
             </div>
         </section>
 
         <!-- VIEW 2: SIGN IN FORM -->
-        <section id="signin-view" class="w-full max-w-md hidden opacity-0 transition-all duration-500">
-            <div class="glass-card rounded-3xl p-8 shadow-2xl">
-                <div class="flex items-center justify-between mb-6">
+        <section id="signin-view" class="w-full max-w-md hidden opacity-0 transition-all duration-300">
+            <div class="human-card rounded-2xl p-6 sm:p-8">
+                <div class="flex items-center justify-between mb-6 border-b border-[#1f2433] pb-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-white">Sign In</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Access your local device account</p>
+                        <h2 class="text-lg font-bold text-white">Sign In</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Enter your device account credentials</p>
                     </div>
-                    <button onclick="switchView('home')" class="text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 p-2.5 rounded-xl transition-all">
-                        <i class="fa-solid fa-arrow-left"></i>
+                    <button onclick="switchView('home')" class="text-slate-400 hover:text-white bg-[#181c28] hover:bg-[#222838] p-2 rounded-lg border border-[#272d3e] transition-all">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
                     </button>
                 </div>
 
                 <form id="signin-form" onsubmit="handleSignIn(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Username</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-                            <input type="text" id="signin-username" required autocomplete="username"
-                                class="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
-                                placeholder="Enter your username">
-                        </div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Username</label>
+                        <input type="text" id="signin-username" required autocomplete="username"
+                            class="w-full px-3.5 py-2.5 rounded-lg human-input text-sm"
+                            placeholder="Enter username">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Password</label>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
                         <div class="relative">
-                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
                             <input type="password" id="signin-password" required autocomplete="current-password"
-                                class="w-full pl-10 pr-10 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                class="w-full pl-3.5 pr-10 py-2.5 rounded-lg human-input text-sm"
                                 placeholder="••••••••">
-                            <button type="button" onclick="togglePassword('signin-password', 'signin-eye')" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200">
-                                <i id="signin-eye" class="fa-regular fa-eye text-sm"></i>
+                            <button type="button" onclick="togglePassword('signin-password', 'signin-eye')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                <i id="signin-eye" class="fa-regular fa-eye text-xs"></i>
                             </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition-all mt-2">
-                        Sign In
+                    <button type="submit" class="w-full py-3 px-5 rounded-lg bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold text-sm active:scale-[0.99] transition-all mt-2">
+                        Log In
                     </button>
                 </form>
 
-                <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+                <div class="mt-6 pt-4 border-t border-[#1f2433] text-center">
                     <p class="text-xs text-slate-400">
-                        Don't have an account on this device?
-                        <button onclick="switchView('signup')" class="text-indigo-400 hover:text-indigo-300 font-semibold ml-1 underline">Create one</button>
+                        No account on this browser?
+                        <button onclick="switchView('signup')" class="text-brand-500 hover:underline font-semibold ml-1">Create one</button>
                     </p>
                 </div>
             </div>
         </section>
 
         <!-- VIEW 3: SIGN UP FORM -->
-        <section id="signup-view" class="w-full max-w-md hidden opacity-0 transition-all duration-500">
-            <div class="glass-card rounded-3xl p-8 shadow-2xl">
-                <div class="flex items-center justify-between mb-6">
+        <section id="signup-view" class="w-full max-w-md hidden opacity-0 transition-all duration-300">
+            <div class="human-card rounded-2xl p-6 sm:p-8">
+                <div class="flex items-center justify-between mb-6 border-b border-[#1f2433] pb-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-white">Create Account</h2>
+                        <h2 class="text-lg font-bold text-white">Create Account</h2>
                         <p class="text-xs text-slate-400 mt-0.5">Stored strictly on this device</p>
                     </div>
-                    <button onclick="switchView('home')" class="text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 p-2.5 rounded-xl transition-all">
-                        <i class="fa-solid fa-arrow-left"></i>
+                    <button onclick="switchView('home')" class="text-slate-400 hover:text-white bg-[#181c28] hover:bg-[#222838] p-2 rounded-lg border border-[#272d3e] transition-all">
+                        <i class="fa-solid fa-arrow-left text-xs"></i>
                     </button>
                 </div>
 
                 <form id="signup-form" onsubmit="handleSignUp(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Choose Username</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-user-tag absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-                            <input type="text" id="signup-username" required autocomplete="username" minlength="3"
-                                class="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
-                                placeholder="e.g. Alex123">
-                        </div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Choose Username</label>
+                        <input type="text" id="signup-username" required autocomplete="username" minlength="3"
+                            class="w-full px-3.5 py-2.5 rounded-lg human-input text-sm"
+                            placeholder="e.g. alex_dev">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Choose Password</label>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Choose Password</label>
                         <div class="relative">
-                            <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
                             <input type="password" id="signup-password" required minlength="4" autocomplete="new-password"
-                                class="w-full pl-10 pr-10 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                class="w-full pl-3.5 pr-10 py-2.5 rounded-lg human-input text-sm"
                                 placeholder="At least 4 characters">
-                            <button type="button" onclick="togglePassword('signup-password', 'signup-eye')" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200">
-                                <i id="signup-eye" class="fa-regular fa-eye text-sm"></i>
+                            <button type="button" onclick="togglePassword('signup-password', 'signup-eye')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                <i id="signup-eye" class="fa-regular fa-eye text-xs"></i>
                             </button>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Confirm Password</label>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Confirm Password</label>
                         <div class="relative">
-                            <i class="fa-solid fa-shield-halved absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
                             <input type="password" id="signup-confirm-password" required minlength="4" autocomplete="new-password"
-                                class="w-full pl-10 pr-10 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                class="w-full pl-3.5 pr-10 py-2.5 rounded-lg human-input text-sm"
                                 placeholder="Re-enter password">
-                            <button type="button" onclick="togglePassword('signup-confirm-password', 'signup-confirm-eye')" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200">
-                                <i id="signup-confirm-eye" class="fa-regular fa-eye text-sm"></i>
+                            <button type="button" onclick="togglePassword('signup-confirm-password', 'signup-confirm-eye')" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300">
+                                <i id="signup-confirm-eye" class="fa-regular fa-eye text-xs"></i>
                             </button>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold shadow-lg shadow-purple-600/30 active:scale-[0.98] transition-all mt-2">
+                    <button type="submit" class="w-full py-3 px-5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm active:scale-[0.99] transition-all mt-2">
                         Register Account
                     </button>
                 </form>
 
-                <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+                <div class="mt-6 pt-4 border-t border-[#1f2433] text-center">
                     <p class="text-xs text-slate-400">
-                        Already have an account here?
-                        <button onclick="switchView('signin')" class="text-indigo-400 hover:text-indigo-300 font-semibold ml-1 underline">Sign In</button>
+                        Already registered here?
+                        <button onclick="switchView('signin')" class="text-brand-500 hover:underline font-semibold ml-1">Sign In</button>
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW 4: AUTHENTICATED DASHBOARD VIEW -->
-        <section id="dashboard-view" class="w-full max-w-lg hidden opacity-0 transition-all duration-500">
-            <div class="glass-card rounded-3xl p-8 shadow-2xl text-center space-y-6">
-                
-                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-2 shadow-inner">
-                    <i class="fa-solid fa-circle-check text-4xl"></i>
-                </div>
-
-                <div>
-                    <!-- MAIN REQUIRED TEXT -->
-                    <h2 class="text-4xl font-extrabold text-white tracking-tight mb-2">Log in</h2>
-                    <p class="text-slate-300 text-base">You are successfully authenticated on this device!</p>
-                </div>
-
-                <!-- USER SESSION CARD -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 text-left space-y-3">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Device Session</span>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            Authenticated
-                        </span>
+        <!-- VIEW 4: AUTHENTICATED WORKSPACE DASHBOARD -->
+        <section id="dashboard-view" class="w-full hidden opacity-0 transition-all duration-300 space-y-6">
+            
+            <!-- Dashboard Top Nav Bar -->
+            <div class="human-card rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-500 font-bold text-sm">
+                        <i class="fa-solid fa-user"></i>
                     </div>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-400">Username:</span>
-                        <span id="dash-username" class="font-bold text-indigo-300"></span>
-                    </div>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-400">Storage Location:</span>
-                        <span class="text-slate-300 font-mono text-xs">browser.localStorage</span>
-                    </div>
-
-                    <div class="flex items-center justify-between text-sm">
-                        <span class="text-slate-400">Session Status:</span>
-                        <span class="text-slate-300 text-xs">Persists across reopens</span>
+                    <div>
+                        <span class="text-[11px] text-slate-400 block font-mono uppercase tracking-wider">Active User</span>
+                        <div class="flex items-center gap-2">
+                            <span id="dash-active-user" class="text-sm font-bold text-white">User</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="pt-2">
-                    <button onclick="handleSignOut()" class="w-full py-3.5 px-6 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        Sign Out
+                <!-- 2 MAIN TABS -->
+                <div class="flex items-center p-1 bg-[#0c0e14] rounded-lg border border-[#222736] w-full sm:w-auto justify-center">
+                    <button id="tab-btn-passwords" onclick="switchDashboardTab('passwords')"
+                        class="px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]">
+                        <i class="fa-solid fa-key text-brand-500"></i>
+                        Current saved passwords
                     </button>
+                    <button id="tab-btn-games" onclick="switchDashboardTab('games')"
+                        class="px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-gamepad"></i>
+                        Uploaded games
+                    </button>
+                </div>
+
+                <!-- LOG OUT BUTTON -->
+                <button onclick="handleSignOut()" class="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-[#181c28] hover:bg-red-500/10 border border-[#272d3e] hover:border-red-500/30 text-slate-300 hover:text-red-400 text-xs font-semibold transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Log Out</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: CURRENT SAVED PASSWORDS -->
+            <div id="tab-content-passwords" class="space-y-4">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            Saved Passwords
+                        </h2>
+                        <p class="text-xs text-slate-400">Stored credentials on this browser instance</p>
+                    </div>
+
+                    <!-- GREEN ADD NEW PASSWORD BUTTON -->
+                    <button onclick="openPasswordModal()" class="px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-sm active:scale-95 transition-all">
+                        <i class="fa-solid fa-plus text-sm"></i>
+                        <span>Add New Password</span>
+                    </button>
+                </div>
+
+                <!-- Passwords Grid -->
+                <div id="passwords-list" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <!-- Dynamic cards will populate here -->
+                </div>
+            </div>
+
+            <!-- TAB 2: UPLOADED GAMES -->
+            <div id="tab-content-games" class="hidden space-y-4">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-base font-bold text-white flex items-center gap-2">
+                            Uploaded Games
+                        </h2>
+                        <p class="text-xs text-slate-400">Custom HTML or GitHub web games</p>
+                    </div>
+
+                    <!-- GREEN ADD GAME BUTTON -->
+                    <button onclick="openGameModal()" class="px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-sm active:scale-95 transition-all">
+                        <i class="fa-solid fa-plus text-sm"></i>
+                        <span>Upload Game</span>
+                    </button>
+                </div>
+
+                <!-- Games Grid -->
+                <div id="games-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Dynamic game cards will populate here -->
                 </div>
             </div>
         </section>
 
     </main>
 
+    <!-- MODAL 1: SAVE PASSWORD -->
+    <div id="modal-password" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity">
+        <div class="human-card rounded-2xl p-6 w-full max-w-md space-y-5 animate-in fade-in duration-150">
+            <div class="flex items-center justify-between border-b border-[#1f2433] pb-3.5">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-brand-500"></i>
+                    Save Password
+                </h3>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleSavePassword(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Website or App Name</label>
+                    <input type="text" id="pass-website" required placeholder="e.g. github.com or Discord"
+                        class="w-full px-3.5 py-2 rounded-lg human-input text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Username / Email</label>
+                    <input type="text" id="pass-username" required placeholder="e.g. dev_user@example.com"
+                        class="w-full px-3.5 py-2 rounded-lg human-input text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="pass-value" required placeholder="Enter password"
+                            class="w-full pl-3.5 pr-10 py-2 rounded-lg human-input text-sm">
+                        <button type="button" onclick="togglePassword('pass-value', 'pass-eye')" class="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300">
+                            <i id="pass-eye" class="fa-regular fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-3 flex items-center gap-2.5">
+                    <button type="button" onclick="closePasswordModal()" class="w-1/2 py-2.5 rounded-lg bg-[#181c28] hover:bg-[#222838] border border-[#272d3e] text-slate-300 font-semibold text-xs">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold text-xs shadow-sm">
+                        Save Credential
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: UPLOAD GAME -->
+    <div id="modal-game" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity">
+        <div class="human-card rounded-2xl p-6 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-[#1f2433] pb-3.5">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad text-indigo-400"></i>
+                    Upload New Game
+                </h3>
+                <button onclick="closeGameModal()" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handleUploadGame(event)" class="space-y-3.5">
+                <!-- COVER IMAGE FILE PICKER -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Game Cover Image</label>
+                    <div class="relative border border-dashed border-[#272d3e] hover:border-brand-500/60 rounded-xl p-3 text-center cursor-pointer transition-colors bg-[#0c0e14] group" onclick="document.getElementById('game-image-file').click()">
+                        <input type="file" id="game-image-file" accept="image/*" required class="hidden" onchange="previewGameImage(event)">
+                        <div id="image-preview-container" class="hidden w-full h-28 rounded-lg overflow-hidden mb-2 relative">
+                            <img id="image-preview" src="" class="w-full h-full object-cover">
+                        </div>
+                        <div id="image-upload-prompt" class="space-y-1 py-2">
+                            <i class="fa-solid fa-image text-xl text-slate-500 group-hover:text-brand-500 transition-colors"></i>
+                            <p class="text-xs text-slate-300 font-medium">Click to pick cover image from device</p>
+                            <p class="text-[10px] text-slate-500 font-mono">PNG, JPG, WEBP</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GAME NAME -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Game Name</label>
+                    <input type="text" id="game-name" required placeholder="e.g. Retro Space Invaders"
+                        class="w-full px-3.5 py-2 rounded-lg human-input text-sm">
+                </div>
+
+                <!-- DESCRIPTION -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Description</label>
+                    <input type="text" id="game-desc" required placeholder="Brief intro to the game"
+                        class="w-full px-3.5 py-2 rounded-lg human-input text-sm">
+                </div>
+
+                <!-- TYPE SELECTOR -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Source Type</label>
+                    <select id="game-type" onchange="toggleGameTypeInputs()" class="w-full px-3.5 py-2 rounded-lg human-input text-sm bg-[#0c0e14]">
+                        <option value="Github">Github Link</option>
+                        <option value="html">HTML Code</option>
+                    </select>
+                </div>
+
+                <!-- GITHUB LINK INPUT -->
+                <div id="group-github">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Github URL / Hosted Game Link</label>
+                    <input type="url" id="game-github-url" placeholder="https://username.github.io/repository/"
+                        class="w-full px-3.5 py-2 rounded-lg human-input text-sm">
+                </div>
+
+                <!-- HTML CODE TEXTAREA -->
+                <div id="group-html" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">HTML Code</label>
+                    <textarea id="game-html-code" rows="5" placeholder="<!DOCTYPE html><html><body>...</body></html>"
+                        class="w-full px-3.5 py-2 rounded-lg human-input text-xs font-mono resize-y"></textarea>
+                </div>
+
+                <div class="pt-3 flex items-center gap-2.5">
+                    <button type="button" onclick="closeGameModal()" class="w-1/2 py-2.5 rounded-lg bg-[#181c28] hover:bg-[#222838] border border-[#272d3e] text-slate-300 font-semibold text-xs">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm">
+                        Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN GAME PLAYER OVERLAY -->
+    <div id="game-player-overlay" class="fixed inset-0 z-50 hidden bg-[#07080b] flex flex-col">
+        <!-- TOP RIGHT RED X CLOSE BUTTON -->
+        <div class="absolute top-4 right-4 z-50 flex items-center gap-3">
+            <span id="player-game-title" class="text-xs font-mono text-slate-300 bg-[#0c0e14]/90 border border-[#222736] px-3 py-1 rounded-md backdrop-blur-md">
+                Game Player
+            </span>
+            <!-- DISTINCT RED CLOSE BUTTON AT TOP RIGHT -->
+            <button onclick="closeGamePlayer()" class="w-9 h-9 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center shadow-lg active:scale-90 transition-all" title="Exit Game">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <!-- FULLSCREEN GAME CONTAINER -->
+        <div class="w-full h-full flex-1 bg-black">
+            <iframe id="game-iframe" class="w-full h-full border-0" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+        </div>
+    </div>
+
     <!-- FOOTER -->
-    <footer class="relative z-10 text-center py-6 text-xs text-slate-500 border-t border-slate-900/80">
-        <p>Protected by Device Local Storage Security Standards • Offline Ready</p>
+    <footer class="relative z-10 text-center py-5 text-xs text-slate-500 font-mono border-t border-[#12151e]">
+        <p>Device Auth & Workspace • Clean Architecture</p>
     </footer>
 
     <script>
@@ -322,14 +513,15 @@
         const notificationIcon = document.getElementById('notification-icon');
         const notificationText = document.getElementById('notification-text');
 
-        let currentView = 'home';
+        let currentUser = null;
+        let selectedGameImageBase64 = '';
 
-        // INITIALIZATION
+        // INITIAL LOAD
         window.addEventListener('DOMContentLoaded', () => {
             const activeUser = localStorage.getItem('active_session_user');
 
             if (activeUser) {
-                // Instantly present logged in status if session already exists
+                currentUser = activeUser;
                 heroHeader.classList.remove('hero-big');
                 heroHeader.classList.add('hero-title');
                 subtitleContainer.classList.remove('opacity-0');
@@ -338,30 +530,27 @@
                 
                 showDashboard(activeUser);
             } else {
-                // Run the initial "Welcome" headline zoom-down animation sequence
                 runIntroAnimation();
             }
         });
 
-        // INTRO ANIMATION (Zoom down "Welcome" hero text)
+        // HERO ZOOM DOWN ANIMATION
         function runIntroAnimation() {
             setTimeout(() => {
-                // Zoom down Welcome text into title position
                 heroHeader.classList.remove('hero-big');
                 heroHeader.classList.add('hero-title');
 
-                // Fade in warning subtitle & CTA buttons
                 setTimeout(() => {
                     subtitleContainer.classList.remove('opacity-0');
                     subtitleContainer.classList.add('opacity-100');
                     subtitleContainer.classList.remove('pointer-events-none');
 
                     switchView('home');
-                }, 700);
-            }, 800);
+                }, 500);
+            }, 600);
         }
 
-        // VIEW SWITCHING HELPER
+        // VIEW ROUTING
         function switchView(targetView) {
             dismissNotification();
 
@@ -378,144 +567,425 @@
                     setTimeout(() => {
                         v.el.classList.remove('opacity-0');
                         v.el.classList.add('opacity-100');
-                    }, 50);
+                    }, 20);
                 } else {
                     v.el.classList.remove('opacity-100');
                     v.el.classList.add('opacity-0');
                     setTimeout(() => {
                         v.el.classList.add('hidden');
-                    }, 300);
+                    }, 200);
                 }
             });
-
-            currentView = targetView;
         }
 
-        // DEVICE LOCALSTORAGE ACCOUNTS DB UTILITIES
-        function getStoredAccounts() {
-            try {
-                return JSON.parse(localStorage.getItem('device_accounts') || '{}');
-            } catch (e) {
-                return {};
+        // DASHBOARD TABS
+        function switchDashboardTab(tab) {
+            const btnPasswords = document.getElementById('tab-btn-passwords');
+            const btnGames = document.getElementById('tab-btn-games');
+            const contentPasswords = document.getElementById('tab-content-passwords');
+            const contentGames = document.getElementById('tab-content-games');
+
+            if (tab === 'passwords') {
+                btnPasswords.className = "px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]";
+                btnGames.className = "px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2";
+                
+                contentPasswords.classList.remove('hidden');
+                contentGames.classList.add('hidden');
+                renderPasswords();
+            } else {
+                btnGames.className = "px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]";
+                btnPasswords.className = "px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2";
+
+                contentGames.classList.remove('hidden');
+                contentPasswords.classList.add('hidden');
+                renderGames();
             }
+        }
+
+        // LOCALSTORAGE ACCOUNTS
+        function getStoredAccounts() {
+            try { return JSON.parse(localStorage.getItem('device_accounts') || '{}'); } catch (e) { return {}; }
         }
 
         function saveAccounts(accounts) {
             localStorage.setItem('device_accounts', JSON.stringify(accounts));
         }
 
-        // SIGN UP HANDLER
+        // SIGN UP
         function handleSignUp(event) {
             event.preventDefault();
-
             const username = document.getElementById('signup-username').value.trim();
             const password = document.getElementById('signup-password').value;
             const confirmPassword = document.getElementById('signup-confirm-password').value;
 
-            if (!username || !password) {
-                showNotification('Please complete all required fields.', 'error');
-                return;
-            }
-
             if (password !== confirmPassword) {
-                showNotification('Passwords do not match. Please try again.', 'error');
+                showNotification('Passwords do not match.', 'error');
                 return;
             }
 
             const accounts = getStoredAccounts();
-
-            // Check if username already exists on this device
             if (accounts[username.toLowerCase()]) {
-                showNotification('An account with this username already exists on this device.', 'error');
+                showNotification('Username already taken on this device.', 'error');
                 return;
             }
 
-            // Save new user account to device LocalStorage
-            accounts[username.toLowerCase()] = {
-                username: username, // preserved casing
-                password: password,
-                createdAt: new Date().toISOString()
-            };
-
+            accounts[username.toLowerCase()] = { username, password, createdAt: new Date().toISOString() };
             saveAccounts(accounts);
 
-            // Auto log in after creation
             localStorage.setItem('active_session_user', username);
+            currentUser = username;
             document.getElementById('signup-form').reset();
 
-            showNotification('Account created successfully on this device!', 'success');
-            setTimeout(() => {
-                showDashboard(username);
-            }, 600);
+            showNotification('Account created successfully!', 'success');
+            setTimeout(() => { showDashboard(username); }, 400);
         }
 
-        // SIGN IN HANDLER
+        // SIGN IN
         function handleSignIn(event) {
             event.preventDefault();
-
             const username = document.getElementById('signin-username').value.trim();
             const password = document.getElementById('signin-password').value;
 
             const accounts = getStoredAccounts();
             const account = accounts[username.toLowerCase()];
 
-            if (!account) {
-                showNotification('No account with that username found on this device.', 'error');
+            if (!account || account.password !== password) {
+                showNotification('Invalid credentials for this device.', 'error');
                 return;
             }
 
-            if (account.password !== password) {
-                showNotification('Incorrect password. Please try again.', 'error');
-                return;
-            }
-
-            // Save active session
             localStorage.setItem('active_session_user', account.username);
+            currentUser = account.username;
             document.getElementById('signin-form').reset();
 
             showDashboard(account.username);
         }
 
-        // DASHBOARD HANDLER
         function showDashboard(username) {
-            document.getElementById('dash-username').textContent = username;
+            currentUser = username;
+            document.getElementById('dash-active-user').textContent = username;
             switchView('dashboard');
+            switchDashboardTab('passwords');
         }
 
-        // SIGN OUT HANDLER
         function handleSignOut() {
             localStorage.removeItem('active_session_user');
-            showNotification('You have signed out of your current session.', 'info');
+            currentUser = null;
+            showNotification('Signed out from device.', 'info');
             switchView('home');
         }
 
-        // TOGGLE PASSWORD VISIBILITY
-        function togglePassword(inputId, eyeIconId) {
-            const input = document.getElementById(inputId);
-            const eyeIcon = document.getElementById(eyeIconId);
+        // PASSWORDS TAB DATA LOGIC
+        function getUserPasswordsKey() {
+            return `user_passwords_${currentUser.toLowerCase()}`;
+        }
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeIcon.classList.remove('fa-eye');
-                eyeIcon.classList.add('fa-eye-slash');
+        function getSavedPasswords() {
+            try { return JSON.parse(localStorage.getItem(getUserPasswordsKey()) || '[]'); } catch (e) { return []; }
+        }
+
+        function savePasswordsList(list) {
+            localStorage.setItem(getUserPasswordsKey(), JSON.stringify(list));
+        }
+
+        function openPasswordModal() {
+            document.getElementById('modal-password').classList.remove('hidden');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('modal-password').classList.add('hidden');
+        }
+
+        function handleSavePassword(e) {
+            e.preventDefault();
+            const website = document.getElementById('pass-website').value.trim();
+            const username = document.getElementById('pass-username').value.trim();
+            const password = document.getElementById('pass-value').value;
+
+            const list = getSavedPasswords();
+            list.push({ id: Date.now(), website, username, password });
+            savePasswordsList(list);
+
+            closePasswordModal();
+            document.getElementById('pass-website').value = '';
+            document.getElementById('pass-username').value = '';
+            document.getElementById('pass-value').value = '';
+
+            renderPasswords();
+            showNotification('Password saved!', 'success');
+        }
+
+        function deletePassword(id) {
+            let list = getSavedPasswords();
+            list = list.filter(item => item.id !== id);
+            savePasswordsList(list);
+            renderPasswords();
+        }
+
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showNotification('Copied to clipboard!', 'success');
+        }
+
+        function renderPasswords() {
+            const list = getSavedPasswords();
+            const container = document.getElementById('passwords-list');
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full human-card rounded-xl p-8 text-center text-slate-400 space-y-1.5">
+                        <i class="fa-solid fa-key text-2xl text-slate-600 mb-1"></i>
+                        <p class="text-xs font-semibold text-slate-300">No passwords stored yet</p>
+                        <p class="text-[11px] text-slate-500">Click "Add New Password" to save site credentials.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(item => `
+                <div class="human-card rounded-xl p-4 space-y-2.5 relative group">
+                    <div class="flex items-center justify-between border-b border-[#1f2433] pb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-globe text-slate-400 text-xs"></i>
+                            <span class="font-bold text-white text-xs">${escapeHtml(item.website)}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="copyToClipboard('${escapeHtml(item.password)}')" class="text-slate-400 hover:text-brand-500 p-1 transition-colors" title="Copy Password">
+                                <i class="fa-regular fa-copy text-xs"></i>
+                            </button>
+                            <button onclick="deletePassword(${item.id})" class="text-slate-500 hover:text-red-400 p-1 transition-colors" title="Delete">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 text-[11px]">User:</span>
+                            <span class="font-mono text-slate-200 text-[11px]">${escapeHtml(item.username)}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 text-[11px]">Pass:</span>
+                            <div class="flex items-center gap-2">
+                                <span id="pass-text-${item.id}" class="font-mono text-slate-300 text-[11px]">••••••••</span>
+                                <button onclick="togglePasswordCardVisibility(${item.id}, '${escapeHtml(item.password)}')" class="text-slate-500 hover:text-slate-300">
+                                    <i id="pass-card-eye-${item.id}" class="fa-regular fa-eye text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function togglePasswordCardVisibility(id, realPass) {
+            const el = document.getElementById(`pass-text-${id}`);
+            const eye = document.getElementById(`pass-card-eye-${id}`);
+            if (el.textContent === '••••••••') {
+                el.textContent = realPass;
+                eye.className = 'fa-regular fa-eye-slash text-xs';
             } else {
-                input.type = 'password';
-                eyeIcon.classList.remove('fa-eye-slash');
-                eyeIcon.classList.add('fa-eye');
+                el.textContent = '••••••••';
+                eye.className = 'fa-regular fa-eye text-xs';
             }
         }
 
-        // NOTIFICATIONS SYSTEM
+        // GAMES TAB DATA LOGIC
+        function getUserGamesKey() {
+            return `user_games_${currentUser.toLowerCase()}`;
+        }
+
+        function getSavedGames() {
+            try { return JSON.parse(localStorage.getItem(getUserGamesKey()) || '[]'); } catch (e) { return []; }
+        }
+
+        function saveGamesList(list) {
+            localStorage.setItem(getUserGamesKey(), JSON.stringify(list));
+        }
+
+        function openGameModal() {
+            document.getElementById('modal-game').classList.remove('hidden');
+        }
+
+        function closeGameModal() {
+            document.getElementById('modal-game').classList.add('hidden');
+        }
+
+        function toggleGameTypeInputs() {
+            const type = document.getElementById('game-type').value;
+            const groupGithub = document.getElementById('group-github');
+            const groupHtml = document.getElementById('group-html');
+
+            if (type === 'Github') {
+                groupGithub.classList.remove('hidden');
+                groupHtml.classList.add('hidden');
+            } else {
+                groupGithub.classList.add('hidden');
+                groupHtml.classList.remove('hidden');
+            }
+        }
+
+        function previewGameImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedGameImageBase64 = e.target.result;
+                document.getElementById('image-preview').src = selectedGameImageBase64;
+                document.getElementById('image-preview-container').classList.remove('hidden');
+                document.getElementById('image-upload-prompt').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleUploadGame(e) {
+            e.preventDefault();
+            const name = document.getElementById('game-name').value.trim();
+            const desc = document.getElementById('game-desc').value.trim();
+            const type = document.getElementById('game-type').value;
+            const githubUrl = document.getElementById('game-github-url').value.trim();
+            const htmlCode = document.getElementById('game-html-code').value;
+
+            if (!selectedGameImageBase64) {
+                showNotification('Please select a cover image.', 'error');
+                return;
+            }
+
+            const list = getSavedGames();
+            list.push({
+                id: Date.now(),
+                name,
+                desc,
+                type,
+                githubUrl,
+                htmlCode,
+                image: selectedGameImageBase64
+            });
+
+            saveGamesList(list);
+
+            closeGameModal();
+            selectedGameImageBase64 = '';
+            document.getElementById('game-name').value = '';
+            document.getElementById('game-desc').value = '';
+            document.getElementById('game-github-url').value = '';
+            document.getElementById('game-html-code').value = '';
+            document.getElementById('image-preview-container').classList.add('hidden');
+            document.getElementById('image-upload-prompt').classList.remove('hidden');
+
+            renderGames();
+            showNotification('Game uploaded successfully!', 'success');
+        }
+
+        function deleteGame(id) {
+            let list = getSavedGames();
+            list = list.filter(item => item.id !== id);
+            saveGamesList(list);
+            renderGames();
+        }
+
+        function renderGames() {
+            const list = getSavedGames();
+            const container = document.getElementById('games-list');
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full human-card rounded-xl p-8 text-center text-slate-400 space-y-1.5">
+                        <i class="fa-solid fa-gamepad text-2xl text-slate-600 mb-1"></i>
+                        <p class="text-xs font-semibold text-slate-300">No games uploaded yet</p>
+                        <p class="text-[11px] text-slate-500">Click "Upload Game" to add an HTML or GitHub web game.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = list.map(game => `
+                <div class="human-card rounded-xl overflow-hidden flex flex-col justify-between group">
+                    <div>
+                        <div class="h-36 w-full overflow-hidden relative bg-[#0a0c10]">
+                            <img src="${game.image}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                            <span class="absolute top-2.5 left-2.5 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#0c0e14]/90 border border-[#272d3e] text-slate-300">
+                                ${game.type}
+                            </span>
+                            <button onclick="deleteGame(${game.id})" class="absolute top-2.5 right-2.5 w-6 h-6 rounded bg-[#0c0e14]/90 hover:bg-red-500 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="p-3.5 space-y-1">
+                            <h3 class="font-bold text-white text-sm truncate">${escapeHtml(game.name)}</h3>
+                            <p class="text-xs text-slate-400 line-clamp-2">${escapeHtml(game.desc)}</p>
+                        </div>
+                    </div>
+
+                    <!-- BRIGHT GREEN PLAY BUTTON -->
+                    <div class="p-3.5 pt-0">
+                        <button onclick="launchGame(${game.id})" class="w-full py-2 px-3 rounded-lg bg-brand-500 hover:bg-brand-600 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
+                            <i class="fa-solid fa-play text-[10px]"></i>
+                            <span>Play Game</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // FULLSCREEN GAME LAUNCHER OVERLAY
+        function launchGame(id) {
+            const games = getSavedGames();
+            const game = games.find(g => g.id === id);
+            if (!game) return;
+
+            const overlay = document.getElementById('game-player-overlay');
+            const iframe = document.getElementById('game-iframe');
+            document.getElementById('player-game-title').textContent = game.name;
+
+            if (game.type === 'html') {
+                iframe.srcdoc = game.htmlCode;
+            } else {
+                iframe.srcdoc = '';
+                iframe.src = game.githubUrl;
+            }
+
+            overlay.classList.remove('hidden');
+        }
+
+        function closeGamePlayer() {
+            const overlay = document.getElementById('game-player-overlay');
+            const iframe = document.getElementById('game-iframe');
+            iframe.srcdoc = '';
+            iframe.src = 'about:blank';
+            overlay.classList.add('hidden');
+        }
+
+        // UTILS
+        function togglePassword(inputId, eyeIconId) {
+            const input = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(eyeIconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
         function showNotification(message, type = 'info') {
             notificationText.textContent = message;
-            notificationBox.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-300', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300', 'bg-indigo-500/10', 'border-indigo-500/30', 'text-indigo-300');
-
+            notificationBox.className = 'w-full max-w-md mb-6 p-3.5 rounded-xl text-xs font-medium transition-all duration-200 border flex items-center justify-between gap-3 shadow-lg ';
+            
             if (type === 'error') {
                 notificationBox.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
                 notificationIcon.className = 'fa-solid fa-circle-exclamation text-red-400';
             } else if (type === 'success') {
-                notificationBox.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
-                notificationIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+                notificationBox.classList.add('bg-brand-500/10', 'border-brand-500/30', 'text-brand-300');
+                notificationIcon.className = 'fa-solid fa-circle-check text-brand-400';
             } else {
                 notificationBox.classList.add('bg-indigo-500/10', 'border-indigo-500/30', 'text-indigo-300');
                 notificationIcon.className = 'fa-solid fa-circle-info text-indigo-400';
@@ -524,6 +994,11 @@
 
         function dismissNotification() {
             notificationBox.classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
 </body>

@@ -81,6 +81,15 @@
             transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), font-size 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* Terminal Cursor Blink */
+        @keyframes cursor-blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .terminal-cursor {
+            animation: cursor-blink 1s infinite;
+        }
+
         /* Custom Scrollbars */
         ::-webkit-scrollbar {
             width: 8px;
@@ -278,8 +287,8 @@
                     </div>
                 </div>
 
-                <!-- 2 MAIN TABS -->
-                <div class="flex items-center p-1 bg-[#0c0e14] rounded-lg border border-[#222736] w-full sm:w-auto justify-center">
+                <!-- 3 MAIN TABS -->
+                <div class="flex items-center p-1 bg-[#0c0e14] rounded-lg border border-[#222736] w-full sm:w-auto justify-center flex-wrap gap-1">
                     <button id="tab-btn-passwords" onclick="switchDashboardTab('passwords')"
                         class="px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]">
                         <i class="fa-solid fa-key text-brand-500"></i>
@@ -289,6 +298,11 @@
                         class="px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2">
                         <i class="fa-solid fa-gamepad"></i>
                         Uploaded games
+                    </button>
+                    <button id="tab-btn-cmd" onclick="switchDashboardTab('cmd')"
+                        class="px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-terminal text-emerald-400"></i>
+                        Command prompt
                     </button>
                 </div>
 
@@ -342,6 +356,39 @@
                 <!-- Games Grid -->
                 <div id="games-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <!-- Dynamic game cards will populate here -->
+                </div>
+            </div>
+
+            <!-- TAB 3: COMMAND PROMPT -->
+            <div id="tab-content-cmd" class="hidden space-y-4">
+                <div class="w-full bg-black border border-[#222736] rounded-xl p-4 sm:p-6 font-mono text-xs sm:text-sm min-h-[420px] flex flex-col justify-between shadow-2xl">
+                    <div id="terminal-scroll-area" class="overflow-y-auto max-h-[380px] space-y-3 pr-2">
+                        <!-- HEADER TEXT -->
+                        <div class="text-white font-bold text-sm tracking-wide">
+                            Terminal, access hidden stuff!
+                        </div>
+                        <div class="text-slate-500 text-xs">
+                            Type commands using the formats below:
+                            <br>• Passwords/Find/:[name]
+                            <br>• Games/Find/:[game name]
+                            <br>• Server/Access/:Account age
+                            <br>• Server/Access/:current users on device
+                        </div>
+                        
+                        <!-- DYNAMIC OUTPUT LOG -->
+                        <div id="terminal-history" class="space-y-2 mt-4 text-white"></div>
+                    </div>
+
+                    <!-- INPUT FIELD & TYPING CURSOR -->
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex items-center gap-2 text-white">
+                        <span class="text-emerald-400 font-bold">&gt;</span>
+                        <div class="relative flex-1 flex items-center">
+                            <input type="text" id="terminal-input" onkeydown="handleTerminalCommand(event)" autocomplete="off" spellcheck="false"
+                                class="w-full bg-transparent text-white font-mono text-xs sm:text-sm border-none outline-none focus:outline-none p-0 pr-3"
+                                placeholder="Type a command...">
+                            <span class="w-2 h-4 bg-white inline-block terminal-cursor -ml-2 pointer-events-none"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -593,24 +640,115 @@
         function switchDashboardTab(tab) {
             const btnPasswords = document.getElementById('tab-btn-passwords');
             const btnGames = document.getElementById('tab-btn-games');
+            const btnCmd = document.getElementById('tab-btn-cmd');
+
             const contentPasswords = document.getElementById('tab-content-passwords');
             const contentGames = document.getElementById('tab-content-games');
+            const contentCmd = document.getElementById('tab-content-cmd');
+
+            // Reset tab styles
+            [btnPasswords, btnGames, btnCmd].forEach(btn => {
+                btn.className = "px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2";
+            });
+
+            // Hide contents
+            contentPasswords.classList.add('hidden');
+            contentGames.classList.add('hidden');
+            contentCmd.classList.add('hidden');
 
             if (tab === 'passwords') {
                 btnPasswords.className = "px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]";
-                btnGames.className = "px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2";
-                
                 contentPasswords.classList.remove('hidden');
-                contentGames.classList.add('hidden');
                 renderPasswords();
-            } else {
+            } else if (tab === 'games') {
                 btnGames.className = "px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]";
-                btnPasswords.className = "px-4 py-2 rounded-md text-xs font-semibold text-slate-400 hover:text-white transition-all flex items-center gap-2";
-
                 contentGames.classList.remove('hidden');
-                contentPasswords.classList.add('hidden');
                 renderGames();
+            } else if (tab === 'cmd') {
+                btnCmd.className = "px-4 py-2 rounded-md text-xs font-semibold transition-all flex items-center gap-2 bg-[#1c2230] text-white border border-[#2d364d]";
+                contentCmd.classList.remove('hidden');
+                setTimeout(() => document.getElementById('terminal-input').focus(), 50);
             }
+        }
+
+        // TERMINAL COMMAND PROMPT LOGIC
+        function handleTerminalCommand(e) {
+            if (e.key !== 'Enter') return;
+
+            const inputEl = document.getElementById('terminal-input');
+            const command = inputEl.value.trim();
+            if (!command) return;
+
+            const history = document.getElementById('terminal-history');
+
+            // Log entered command
+            const cmdLine = document.createElement('div');
+            cmdLine.className = 'text-slate-400 font-mono text-xs';
+            cmdLine.innerHTML = `<span class="text-emerald-400">&gt;</span> ${escapeHtml(command)}`;
+            history.appendChild(cmdLine);
+
+            const response = document.createElement('div');
+            response.className = 'text-white font-mono text-xs pl-3 border-l-2 border-emerald-500 py-1 my-1';
+
+            // Parse commands
+            if (command.startsWith("Passwords/Find/:")) {
+                const searchName = command.replace("Passwords/Find/:", "").trim().toLowerCase();
+                const passwords = getSavedPasswords();
+                const matched = passwords.filter(p => p.website.toLowerCase().includes(searchName) || p.username.toLowerCase().includes(searchName));
+
+                if (matched.length > 0) {
+                    response.innerHTML = matched.map(p => `Found Password -> Website: <span class="text-emerald-400">${escapeHtml(p.website)}</span> | Username: ${escapeHtml(p.username)} | Password: ${escapeHtml(p.password)}`).join('<br>');
+                } else {
+                    response.innerHTML = `<span class="text-amber-400">No passwords found matching "${escapeHtml(searchName)}"</span>`;
+                }
+            } 
+            else if (command.startsWith("Games/Find/:")) {
+                const searchGame = command.replace("Games/Find/:", "").trim().toLowerCase();
+                const games = getSavedGames();
+                const matched = games.filter(g => g.name.toLowerCase().includes(searchGame) || g.desc.toLowerCase().includes(searchGame));
+
+                if (matched.length > 0) {
+                    response.innerHTML = matched.map(g => `Found Game -> Name: <span class="text-emerald-400">${escapeHtml(g.name)}</span> | Type: ${escapeHtml(g.type)} | Desc: ${escapeHtml(g.desc)}`).join('<br>');
+                } else {
+                    response.innerHTML = `<span class="text-amber-400">No games found matching "${escapeHtml(searchGame)}"</span>`;
+                }
+            } 
+            else if (command === "Server/Access/: Account age") {
+                const accounts = getStoredAccounts();
+                const account = accounts[currentUser.toLowerCase()];
+
+                if (account && account.createdAt) {
+                    const createdDate = new Date(account.createdAt);
+                    const now = new Date();
+                    const ageMs = now - createdDate;
+                    const days = Math.floor(ageMs / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((ageMs / (1000 * 60 * 60)) % 24);
+
+                    response.innerHTML = `Active Account: <span class="text-emerald-400">${escapeHtml(currentUser)}</span><br>Date Created: ${createdDate.toLocaleString()}<br>Account Age: ${days} days, ${hours} hours`;
+                } else {
+                    response.innerHTML = `Active Account: <span class="text-emerald-400">${escapeHtml(currentUser)}</span><br>Date Created: Legacy account (Date not stored)<br>Account Age: Active session`;
+                }
+            } 
+            else if (command === "Server/Access/: current users on device") {
+                const accounts = getStoredAccounts();
+                const userNames = Object.values(accounts).map(a => a.username);
+
+                if (userNames.length > 0) {
+                    response.innerHTML = `All Users Created on this Device (${userNames.length}):<br>` + userNames.map(u => ` • <span class="text-emerald-400">${escapeHtml(u)}</span>`).join('<br>');
+                } else {
+                    response.innerHTML = 'No users found created on this device.';
+                }
+            } 
+            else {
+                response.innerHTML = `<span class="text-red-400">Unknown command. Available commands:</span><br>• Passwords/Find/:[name]<br>• Games/Find/:[game name]<br>• Server/Access/: Account age<br>• Server/Access/: current users on device`;
+            }
+
+            history.appendChild(response);
+            inputEl.value = '';
+
+            // Auto scroll down
+            const scrollArea = document.getElementById('terminal-scroll-area');
+            scrollArea.scrollTop = scrollArea.scrollHeight;
         }
 
         // LOCALSTORAGE ACCOUNTS

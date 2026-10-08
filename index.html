@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Storage Unit</title>
+    <title>Vault & Arcade — Device Workspace</title>
     <link rel="icon" type="image/png" href="Monkey-Selfie.png" />
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -496,8 +496,9 @@
     </div>
 
     <!-- FOOTER -->
-    <footer class="relative z-10 text-center py-5 text-xs text-slate-500 font-mono border-t border-[#12151e]">
-        <p>Device Auth & Workspace • Clean Architecture</p>
+    <footer class="relative z-10 text-center py-5 text-xs text-slate-500 font-mono border-t border-[#12151e] space-y-1">
+        <p>&copy; The Storage Unit 26-26 cuz its new</p>
+        <p class="text-[10px] text-slate-600">Property of The unit's station</p>
     </footer>
 
     <script>
@@ -554,6 +555,15 @@
         // VIEW ROUTING
         function switchView(targetView) {
             dismissNotification();
+
+            // Hide welcome title and warning banner when on dashboard (signed in), show otherwise
+            if (targetView === 'dashboard') {
+                heroHeader.classList.add('hidden');
+                subtitleContainer.classList.add('hidden');
+            } else {
+                heroHeader.classList.remove('hidden');
+                subtitleContainer.classList.remove('hidden');
+            }
 
             const views = [
                 { id: 'home', el: homeView },

@@ -1,88 +1,530 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
 <head>
-  <meta charset="UTF-8" />
-  <title>Google Sheets Auth Example</title>
-  <style>
-    body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
-    .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-    input { width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 5px; }
-    button.secondary { background: #6c757d; }
-    #status { margin-top: 15px; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Authenticator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 4s infinite alternate',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%': { opacity: '0.3', transform: 'scale(1)' },
+                            '100%': { opacity: '0.6', transform: 'scale(1.1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-input:focus {
+            background: rgba(30, 41, 59, 0.9);
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Hero text zoom-down animation states */
+        .hero-big {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            transform: translateY(28vh) scale(1.15);
+        }
+
+        .hero-title {
+            font-size: clamp(2.25rem, 5vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            transform: translateY(0) scale(1);
+        }
+
+        .transition-hero {
+            transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1), font-size 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .fade-enter {
+            opacity: 0;
+            transform: translateY(12px) scale(0.98);
+        }
+        .fade-enter-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
 </head>
-<body>
+<body class="h-full min-h-screen bg-slate-950 font-sans text-slate-100 antialiased overflow-x-hidden flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
 
-  <div class="card" id="authCard">
-    <h2>Sign In / Sign Up</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="handleAuth('login')">Log In</button>
-    <button class="secondary" onclick="handleAuth('signup')">Create Account</button>
-    <div id="status"></div>
-  </div>
+    <!-- Ambient Background Blobs -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div class="absolute top-1/2 -right-40 w-96 h-96 bg-purple-600/25 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 2s;"></div>
+        <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
+    </div>
 
-  <script>
-    // Paste your deployed Google Apps Script Web App URL here
-    const SCRIPT_URL = "https://script.google.com/a/macros/acsd1.org/s/AKfycbxLF_Dl429Q9QNLzG_URiDU3oFKJaapJOOi4_3GSV3GsX8bhbevVP1u2G93eUNTQmuh8g/exec";
+    <!-- Main Container -->
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full">
 
-    // Auto log-in check on page load using LocalStorage
-    window.onload = () => {
-      const savedUser = localStorage.getItem("loggedInUser");
-      if (savedUser) {
-        showLoggedInState(savedUser);
-      }
-    };
+        <!-- ANIMATED HERO HEADLINE -->
+        <header id="hero-header" class="w-full text-center mt-6 sm:mt-10 mb-6 transition-hero hero-big">
+            <h1 class="bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm">
+                Welcome
+            </h1>
+        </header>
 
-    async function handleAuth(action) {
-      const usernameInput = document.getElementById("username").value.trim();
-      const passwordInput = document.getElementById("password").value;
-      const statusDiv = document.getElementById("status");
+        <!-- SUBTITLE & WARNING (Fades in after hero animation) -->
+        <div id="subtitle-container" class="text-center max-w-2xl mb-8 opacity-0 transition-opacity duration-700 ease-out pointer-events-none">
+            <p class="text-base sm:text-lg text-slate-300 font-medium leading-relaxed">
+                Create or log into an account to continue,
+                <span class="block mt-2 text-xs sm:text-sm text-amber-400/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5 backdrop-blur-md shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5 text-amber-400"></i>
+                    Warning: Accounts and all data are only stored on the device it was created on, for security purposes.
+                </span>
+            </p>
+        </div>
 
-      if (!usernameInput || !passwordInput) {
-        statusDiv.innerText = "Please fill in all fields.";
-        return;
-      }
+        <!-- NOTIFICATION BANNER -->
+        <div id="notification-box" class="hidden w-full max-w-md mb-6 p-4 rounded-xl text-sm font-medium transition-all duration-300 border flex items-center gap-3">
+            <i id="notification-icon" class="fa-solid text-base"></i>
+            <span id="notification-text" class="flex-1"></span>
+            <button onclick="dismissNotification()" class="text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
-      statusDiv.innerText = "Connecting to Google Sheet...";
+        <!-- VIEW 1: HOME CTA BUTTONS -->
+        <section id="home-view" class="w-full max-w-md hidden opacity-0 transition-all duration-500">
+            <div class="glass-card rounded-3xl p-8 shadow-2xl space-y-4">
+                <button onclick="switchView('signin')" class="w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all">
+                    <i class="fa-solid fa-right-to-bracket text-lg"></i>
+                    <span>Sign In</span>
+                    <i class="fa-solid fa-arrow-right absolute right-6 text-sm opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                </button>
 
-      try {
-        // Fetch to Google Apps Script endpoint using no-cors handling or text response parsing
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoids CORS preflight issues with Apps Script
-          body: JSON.stringify({ action: action, username: usernameInput, password: passwordInput })
+                <button onclick="switchView('signup')" class="w-full group relative flex items-center justify-center gap-3 py-4 px-6 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/60 font-semibold active:scale-[0.98] transition-all">
+                    <i class="fa-solid fa-user-plus text-lg text-indigo-400"></i>
+                    <span>Create Account</span>
+                    <i class="fa-solid fa-arrow-right absolute right-6 text-sm opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 2: SIGN IN FORM -->
+        <section id="signin-view" class="w-full max-w-md hidden opacity-0 transition-all duration-500">
+            <div class="glass-card rounded-3xl p-8 shadow-2xl">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Sign In</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Access your local device account</p>
+                    </div>
+                    <button onclick="switchView('home')" class="text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 p-2.5 rounded-xl transition-all">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+
+                <form id="signin-form" onsubmit="handleSignIn(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Username</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="text" id="signin-username" required autocomplete="username"
+                                class="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                placeholder="Enter your username">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Password</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="password" id="signin-password" required autocomplete="current-password"
+                                class="w-full pl-10 pr-10 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                placeholder="••••••••">
+                            <button type="button" onclick="togglePassword('signin-password', 'signin-eye')" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200">
+                                <i id="signin-eye" class="fa-regular fa-eye text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition-all mt-2">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+                    <p class="text-xs text-slate-400">
+                        Don't have an account on this device?
+                        <button onclick="switchView('signup')" class="text-indigo-400 hover:text-indigo-300 font-semibold ml-1 underline">Create one</button>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: SIGN UP FORM -->
+        <section id="signup-view" class="w-full max-w-md hidden opacity-0 transition-all duration-500">
+            <div class="glass-card rounded-3xl p-8 shadow-2xl">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Create Account</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Stored strictly on this device</p>
+                    </div>
+                    <button onclick="switchView('home')" class="text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 p-2.5 rounded-xl transition-all">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+
+                <form id="signup-form" onsubmit="handleSignUp(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Choose Username</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-user-tag absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="text" id="signup-username" required autocomplete="username" minlength="3"
+                                class="w-full pl-10 pr-4 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                placeholder="e.g. Alex123">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Choose Password</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="password" id="signup-password" required minlength="4" autocomplete="new-password"
+                                class="w-full pl-10 pr-10 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                placeholder="At least 4 characters">
+                            <button type="button" onclick="togglePassword('signup-password', 'signup-eye')" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200">
+                                <i id="signup-eye" class="fa-regular fa-eye text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">Confirm Password</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-shield-halved absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="password" id="signup-confirm-password" required minlength="4" autocomplete="new-password"
+                                class="w-full pl-10 pr-10 py-3 rounded-xl glass-input text-white text-sm outline-none placeholder-slate-500"
+                                placeholder="Re-enter password">
+                            <button type="button" onclick="togglePassword('signup-confirm-password', 'signup-confirm-eye')" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200">
+                                <i id="signup-confirm-eye" class="fa-regular fa-eye text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold shadow-lg shadow-purple-600/30 active:scale-[0.98] transition-all mt-2">
+                        Register Account
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-5 border-t border-slate-800 text-center">
+                    <p class="text-xs text-slate-400">
+                        Already have an account here?
+                        <button onclick="switchView('signin')" class="text-indigo-400 hover:text-indigo-300 font-semibold ml-1 underline">Sign In</button>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: AUTHENTICATED DASHBOARD VIEW -->
+        <section id="dashboard-view" class="w-full max-w-lg hidden opacity-0 transition-all duration-500">
+            <div class="glass-card rounded-3xl p-8 shadow-2xl text-center space-y-6">
+                
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 mb-2 shadow-inner">
+                    <i class="fa-solid fa-circle-check text-4xl"></i>
+                </div>
+
+                <div>
+                    <!-- MAIN REQUIRED TEXT -->
+                    <h2 class="text-4xl font-extrabold text-white tracking-tight mb-2">Log in</h2>
+                    <p class="text-slate-300 text-base">You are successfully authenticated on this device!</p>
+                </div>
+
+                <!-- USER SESSION CARD -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 text-left space-y-3">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Device Session</span>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            Authenticated
+                        </span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-slate-400">Username:</span>
+                        <span id="dash-username" class="font-bold text-indigo-300"></span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-slate-400">Storage Location:</span>
+                        <span class="text-slate-300 font-mono text-xs">browser.localStorage</span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-slate-400">Session Status:</span>
+                        <span class="text-slate-300 text-xs">Persists across reopens</span>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="handleSignOut()" class="w-full py-3.5 px-6 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 text-center py-6 text-xs text-slate-500 border-t border-slate-900/80">
+        <p>Protected by Device Local Storage Security Standards • Offline Ready</p>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const heroHeader = document.getElementById('hero-header');
+        const subtitleContainer = document.getElementById('subtitle-container');
+        
+        const homeView = document.getElementById('home-view');
+        const signinView = document.getElementById('signin-view');
+        const signupView = document.getElementById('signup-view');
+        const dashboardView = document.getElementById('dashboard-view');
+
+        const notificationBox = document.getElementById('notification-box');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationText = document.getElementById('notification-text');
+
+        let currentView = 'home';
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            const activeUser = localStorage.getItem('active_session_user');
+
+            if (activeUser) {
+                // Instantly present logged in status if session already exists
+                heroHeader.classList.remove('hero-big');
+                heroHeader.classList.add('hero-title');
+                subtitleContainer.classList.remove('opacity-0');
+                subtitleContainer.classList.add('opacity-100');
+                subtitleContainer.classList.remove('pointer-events-none');
+                
+                showDashboard(activeUser);
+            } else {
+                // Run the initial "Welcome" headline zoom-down animation sequence
+                runIntroAnimation();
+            }
         });
 
-        const result = await response.json();
+        // INTRO ANIMATION (Zoom down "Welcome" hero text)
+        function runIntroAnimation() {
+            setTimeout(() => {
+                // Zoom down Welcome text into title position
+                heroHeader.classList.remove('hero-big');
+                heroHeader.classList.add('hero-title');
 
-        if (result.success) {
-          if (action === "login" || action === "signup") {
-            localStorage.setItem("loggedInUser", usernameInput);
-            showLoggedInState(usernameInput);
-          }
-        } else {
-          statusDiv.innerText = result.message;
+                // Fade in warning subtitle & CTA buttons
+                setTimeout(() => {
+                    subtitleContainer.classList.remove('opacity-0');
+                    subtitleContainer.classList.add('opacity-100');
+                    subtitleContainer.classList.remove('pointer-events-none');
+
+                    switchView('home');
+                }, 700);
+            }, 800);
         }
-      } catch (err) {
-        statusDiv.innerText = "Error connecting to server.";
-        console.error(err);
-      }
-    }
 
-    function showLoggedInState(username) {
-      document.getElementById("authCard").innerHTML = `
-        <h2>Log in</h2>
-        <p>Welcome back, <strong>${username}</strong>!</p>
-        <button onclick="logout()">Sign Out</button>
-      `;
-    }
+        // VIEW SWITCHING HELPER
+        function switchView(targetView) {
+            dismissNotification();
 
-    function logout() {
-      localStorage.removeItem("loggedInUser");
-      location.reload();
-    }
-  </script>
+            const views = [
+                { id: 'home', el: homeView },
+                { id: 'signin', el: signinView },
+                { id: 'signup', el: signupView },
+                { id: 'dashboard', el: dashboardView }
+            ];
+
+            views.forEach(v => {
+                if (v.id === targetView) {
+                    v.el.classList.remove('hidden');
+                    setTimeout(() => {
+                        v.el.classList.remove('opacity-0');
+                        v.el.classList.add('opacity-100');
+                    }, 50);
+                } else {
+                    v.el.classList.remove('opacity-100');
+                    v.el.classList.add('opacity-0');
+                    setTimeout(() => {
+                        v.el.classList.add('hidden');
+                    }, 300);
+                }
+            });
+
+            currentView = targetView;
+        }
+
+        // DEVICE LOCALSTORAGE ACCOUNTS DB UTILITIES
+        function getStoredAccounts() {
+            try {
+                return JSON.parse(localStorage.getItem('device_accounts') || '{}');
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveAccounts(accounts) {
+            localStorage.setItem('device_accounts', JSON.stringify(accounts));
+        }
+
+        // SIGN UP HANDLER
+        function handleSignUp(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('signup-username').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+            if (!username || !password) {
+                showNotification('Please complete all required fields.', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showNotification('Passwords do not match. Please try again.', 'error');
+                return;
+            }
+
+            const accounts = getStoredAccounts();
+
+            // Check if username already exists on this device
+            if (accounts[username.toLowerCase()]) {
+                showNotification('An account with this username already exists on this device.', 'error');
+                return;
+            }
+
+            // Save new user account to device LocalStorage
+            accounts[username.toLowerCase()] = {
+                username: username, // preserved casing
+                password: password,
+                createdAt: new Date().toISOString()
+            };
+
+            saveAccounts(accounts);
+
+            // Auto log in after creation
+            localStorage.setItem('active_session_user', username);
+            document.getElementById('signup-form').reset();
+
+            showNotification('Account created successfully on this device!', 'success');
+            setTimeout(() => {
+                showDashboard(username);
+            }, 600);
+        }
+
+        // SIGN IN HANDLER
+        function handleSignIn(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('signin-username').value.trim();
+            const password = document.getElementById('signin-password').value;
+
+            const accounts = getStoredAccounts();
+            const account = accounts[username.toLowerCase()];
+
+            if (!account) {
+                showNotification('No account with that username found on this device.', 'error');
+                return;
+            }
+
+            if (account.password !== password) {
+                showNotification('Incorrect password. Please try again.', 'error');
+                return;
+            }
+
+            // Save active session
+            localStorage.setItem('active_session_user', account.username);
+            document.getElementById('signin-form').reset();
+
+            showDashboard(account.username);
+        }
+
+        // DASHBOARD HANDLER
+        function showDashboard(username) {
+            document.getElementById('dash-username').textContent = username;
+            switchView('dashboard');
+        }
+
+        // SIGN OUT HANDLER
+        function handleSignOut() {
+            localStorage.removeItem('active_session_user');
+            showNotification('You have signed out of your current session.', 'info');
+            switchView('home');
+        }
+
+        // TOGGLE PASSWORD VISIBILITY
+        function togglePassword(inputId, eyeIconId) {
+            const input = document.getElementById(inputId);
+            const eyeIcon = document.getElementById(eyeIconId);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+
+        // NOTIFICATIONS SYSTEM
+        function showNotification(message, type = 'info') {
+            notificationText.textContent = message;
+            notificationBox.classList.remove('hidden', 'bg-red-500/10', 'border-red-500/30', 'text-red-300', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300', 'bg-indigo-500/10', 'border-indigo-500/30', 'text-indigo-300');
+
+            if (type === 'error') {
+                notificationBox.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
+                notificationIcon.className = 'fa-solid fa-circle-exclamation text-red-400';
+            } else if (type === 'success') {
+                notificationBox.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+                notificationIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            } else {
+                notificationBox.classList.add('bg-indigo-500/10', 'border-indigo-500/30', 'text-indigo-300');
+                notificationIcon.className = 'fa-solid fa-circle-info text-indigo-400';
+            }
+        }
+
+        function dismissNotification() {
+            notificationBox.classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
